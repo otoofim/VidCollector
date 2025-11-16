@@ -28,8 +28,14 @@ ENV/
 .venv/
 .env/
 
+# UV package manager
+.uv/
+uv.lock
+
 # Environment variables
 .env
+.env.local
+.env.production
 
 # Database files
 *.db
@@ -85,9 +91,13 @@ tmp/
 
 # Test coverage
 .coverage
+coverage.xml
 htmlcov/
 .pytest_cache/
 .tox/
+
+# Security
+secrets/
 
 # Documentation
 docs/_build/

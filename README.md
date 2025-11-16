@@ -15,18 +15,50 @@ A powerful YouTube crawler specifically designed to collect Farsi-spoken videos 
 
 ## Installation
 
-1. Clone the repository:
+### Prerequisites (Ubuntu 24.04)
+
+VidCollector is optimized for Ubuntu 24.04 and uses UV as the package manager for fast, reliable dependency management.
+
+📖 **For detailed Ubuntu 24.04 setup instructions, see [UBUNTU_SETUP.md](UBUNTU_SETUP.md)**
+
+### Quick Setup
+
 ```bash
+# Clone the repository
 git clone https://github.com/otoofim/VidCollector.git
 cd VidCollector
+
+# Quick setup (installs system deps, UV, and project deps)
+make quick-setup
+
+# Set up your YouTube API key
+cp .env.example .env
+# Edit .env and add your YouTube Data API v3 key
 ```
 
-2. Install dependencies:
+### Manual Setup
+
+1. **Install system dependencies:**
 ```bash
-pip install -r requirements.txt
+make setup-ubuntu
 ```
 
-3. Set up your YouTube API key:
+2. **Install UV package manager:**
+```bash
+make install-uv
+# Restart your shell or run: source ~/.bashrc
+```
+
+3. **Install project dependencies:**
+```bash
+# For regular use
+make install
+
+# For development (includes testing, linting tools)
+make install-dev
+```
+
+4. **Set up configuration:**
 ```bash
 cp .env.example .env
 # Edit .env and add your YouTube Data API v3 key
@@ -44,20 +76,30 @@ cp .env.example .env
 ### 2. Basic Usage
 
 ```bash
-# Crawl 50 Farsi videos with subtitles
-python main.py crawl --max-videos 50
+# Test the installation (no API key required)
+make run-demo
 
-# Crawl with custom search queries
-python main.py crawl --queries "فیلم ایرانی" "موسیقی ایرانی" --max-videos 100
+# Initialize the database
+uv run python -m vidcollector db init
+
+# Start crawling (basic)
+make crawl
+# or manually:
+uv run python -m vidcollector crawl --max-videos 50
+
+# Crawl with custom search terms
+uv run python -m vidcollector crawl --queries "فیلم ایرانی" "موسیقی ایرانی" --max-videos 100
 
 # Crawl specific YouTube channels
-python main.py crawl-channels --channel-ids UC123456789 UC987654321
+uv run python -m vidcollector crawl-channels --channel-ids UC123456789 UC987654321
 
 # Resume subtitle extraction for existing videos
-python main.py resume-subtitles --max-videos 20
+uv run python -m vidcollector resume-subtitles --max-videos 20
 
 # Show statistics
-python main.py stats --detailed
+make stats
+# or manually:
+uv run python -m vidcollector stats --detailed
 ```
 
 ## Configuration
@@ -180,18 +222,51 @@ print(f"Found {stats['videos_found']} videos")
 print(f"Extracted {stats['subtitles_extracted']} subtitles")
 ```
 
-## Testing
+## Development
 
-Run the test suite:
+### Testing
+
+Run the test suite with UV:
 
 ```bash
-python -m pytest tests/ -v
+# Run all tests
+make test
+
+# Or manually with UV
+uv run pytest tests/ -v --cov=src/vidcollector
+
+# Run specific tests
+uv run python -m unittest tests.test_basic.TestDatabase
 ```
 
-Or run specific tests:
+### Code Quality
 
 ```bash
-python -m unittest tests.test_basic.TestDatabase
+# Format code
+make format
+
+# Run linting
+make lint
+
+# Clean build artifacts
+make clean
+```
+
+### Available Make Commands
+
+```bash
+make help              # Show all available commands
+make setup-ubuntu      # Install Ubuntu 24.04 system dependencies
+make install-uv        # Install UV package manager
+make install           # Install project dependencies
+make install-dev       # Install with development dependencies
+make test             # Run tests with coverage
+make lint             # Run linting (flake8, mypy)
+make format           # Format code (black, isort)
+make run-demo         # Run demo without API key
+make crawl            # Run basic crawl (requires API key)
+make stats            # Show database statistics
+make clean            # Clean build artifacts
 ```
 
 ## Troubleshooting
