@@ -30,6 +30,24 @@ class Config:
     LOG_LEVEL: str = os.getenv('LOG_LEVEL', 'INFO')
     LOG_FILE: str = os.getenv('LOG_FILE', 'logs/vidcollector.log')
     
+    # Web Scraping Configuration
+    HEADLESS_BROWSER: bool = os.getenv('HEADLESS_BROWSER', 'true').lower() == 'true'
+    VIDEO_DOWNLOAD_DIR: str = os.getenv('VIDEO_DOWNLOAD_DIR', 'downloads/videos')
+    SUBTITLE_DOWNLOAD_DIR: str = os.getenv('SUBTITLE_DOWNLOAD_DIR', 'downloads/subtitles')
+    
+    # Compatibility properties for scraping crawler
+    @property
+    def database_path(self) -> str:
+        return self.DATABASE_PATH
+    
+    @property
+    def rate_limit_delay(self) -> float:
+        return self.RATE_LIMIT_DELAY
+    
+    @property
+    def max_videos_per_search(self) -> int:
+        return self.MAX_VIDEOS_PER_SEARCH
+    
     @classmethod
     def validate(cls) -> bool:
         """Validate configuration settings."""

@@ -106,6 +106,11 @@ run-demo:
 	@echo "🚀 Running VidCollector demo..."
 	uv run python example_usage.py
 
+# Run web scraping demo
+run-scraping-demo:
+	@echo "🚀 Running VidCollector web scraping demo..."
+	uv run python scraping_example.py
+
 # Run basic crawl (requires API key)
 crawl:
 	@echo "🚀 Running basic crawl..."
@@ -114,6 +119,20 @@ crawl:
 		exit 1; \
 	fi
 	uv run python -m vidcollector crawl --max-videos 5
+
+# Run web scraping crawl (requires YouTube URL)
+scrape:
+	@echo "🚀 Running web scraping crawl..."
+	@echo "Usage: make scrape URL='https://www.youtube.com/watch?v=VIDEO_ID' MAX_VIDEOS=20"
+	@if [ -z "$(URL)" ]; then echo "❌ Error: URL parameter is required"; exit 1; fi
+	uv run python -m vidcollector.scraping_cli crawl --start-url "$(URL)" --max-videos $(or $(MAX_VIDEOS),10)
+
+# Run scraping without downloading content
+scrape-no-download:
+	@echo "🚀 Running scraping without downloads..."
+	@echo "Usage: make scrape-no-download URL='https://www.youtube.com/watch?v=VIDEO_ID'"
+	@if [ -z "$(URL)" ]; then echo "❌ Error: URL parameter is required"; exit 1; fi
+	uv run python -m vidcollector.scraping_cli crawl --start-url "$(URL)" --no-download --max-videos $(or $(MAX_VIDEOS),10)
 
 # Initialize database
 init-db:
@@ -124,6 +143,16 @@ init-db:
 stats:
 	@echo "📊 Showing statistics..."
 	uv run python -m vidcollector stats --detailed
+
+# Show scraping statistics
+scraping-stats:
+	@echo "📊 Showing scraping statistics..."
+	uv run python -m vidcollector.scraping_cli stats --downloads
+
+# Show video-subtitle mappings
+mapping:
+	@echo "📁 Showing video-subtitle mappings..."
+	uv run python -m vidcollector.scraping_cli mapping
 
 # Development server (if needed)
 dev:

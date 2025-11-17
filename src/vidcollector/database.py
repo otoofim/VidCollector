@@ -213,3 +213,99 @@ class DatabaseManager:
         except Exception as e:
             print(f"Error updating crawl session: {e}")
             return False
+
+
+class VideoDatabase:
+    """Simplified database interface for web scraping crawler."""
+    
+    def __init__(self, db_path: str):
+        """Initialize database connection."""
+        self.db_path = db_path
+        self.db_manager = DatabaseManager(db_path)
+    
+    def video_exists(self, video_id: str) -> bool:
+        """Check if video exists in database."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1 FROM videos WHERE video_id = ?", (video_id,))
+                return cursor.fetchone() is not None
+        except Exception:
+            return False
+    
+    def insert_video(self, video_id: str, title: str, description: str = '', 
+                    channel_title: str = '', published_at: str = '', duration: str = '',
+                    view_count: int = 0, like_count: int = 0, language: str = 'fa',
+                    url: str = '', farsi_score: float = 0.0) -> bool:
+        """Insert video metadata."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT OR REPLACE INTO videos 
+                    (video_id, title, description, channel_title, published_at, 
+                     duration, view_count, like_count, language, tags, thumbnail_url)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (video_id, title, description, channel_title, published_at,
+                      duration, view_count, like_count, language, 
+                      json.dumps({'url': url, 'farsi_score': farsi_score}), ''))
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error inserting video: {e}")
+            return False
+    
+    def insert_subtitle(self, video_id: str, language: str, content: str,
+                       format_type: str = 'srt', source: str = 'downsub.com',
+                       file_path: str = '') -> bool:
+        """Insert subtitle data."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT OR REPLACE INTO subtitles 
+                    (video_id, language, content, format, source, file_path, word_count, char_count)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (video_id, language, content, format_type, source, file_path,
+                      len(content.split()), len(content)))
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error inserting subtitle: {e}")
+            return False
+    
+    def get_stats(self) -> Dict:
+        """Get database statistics."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Video count
+                cursor.execute("SELECT COUNT(*) FROM videos")
+                video_count = cursor.fetchone()[0]
+                
+                # Subtitle count
+                cursor.execute("SELECT COUNT(*) FROM subtitles")
+                subtitle_count = cursor.fetchone()[0]
+                
+                # Farsi subtitle count
+                cursor.execute("SELECT COUNT(*) FROM subtitles WHERE language = 'fa'")
+                farsi_subtitle_count = cursor.fetchone()[0]
+                
+                # English subtitle count
+                cursor.execute("SELECT COUNT(*) FROM subtitles WHERE language = 'en'")
+                english_subtitle_count = cursor.fetchone()[0]
+                
+                return {
+                    'videos': video_count,
+                    'subtitles': subtitle_count,
+                    'farsi_subtitles': farsi_subtitle_count,
+                    'english_subtitles': english_subtitle_count
+                }
+        except Exception as e:
+            print(f"Error getting stats: {e}")
+            return {'videos': 0, 'subtitles': 0, 'farsi_subtitles': 0, 'english_subtitles': 0}
+    
+    def export_data(self, output_file: str, format_type: str = 'csv') -> bool:
+        """Export data to file."""
+        return self.db_manager.export_videos(output_file, format_type)
